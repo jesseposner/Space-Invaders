@@ -1,6 +1,6 @@
 var Starfield = function functionName() {
   this.width = 512;
-  this.height = 480;
+  this.height = 600;
   this.minVelocity = 15;
   this.maxVelocity = 30;
   this.starCount = 100;
