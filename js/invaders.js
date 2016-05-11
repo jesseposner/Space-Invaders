@@ -37,7 +37,7 @@ function init(ctx, canvas) {
     State.enemies.push({
       pos: [Math.random() * canvas.width,
             Math.random() * (canvas.height - 200)],
-      sprite: new Sprite('img/ufos.png', [0, 0], [64.7, 64],
+      sprite: new Sprite('img/ufos.png', [0, 0], [64, 64],
                          20, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     });
   }
@@ -82,7 +82,7 @@ function renderEntity(entity, ctx) {
 function update(dt, canvas, starField) {
   State.gameTime += dt;
 
-  handleInput(dt);
+  handleInput(dt, canvas);
   updateEntities(dt, canvas);
   updateStarfield(dt, starField);
 }
@@ -125,10 +125,13 @@ function updateStarfield(dt, starField) {
   });
 }
 
-function handleInput(dt) {
-  if (Key.isPressed('left')) {
+function handleInput(dt, canvas) {
+  if (Key.isPressed('left') && State.player.pos[0] >= 0) {
     State.player.pos[0] -= playerSpeed * dt;
-  } else if (Key.isPressed('right')) {
+  } else if (
+      Key.isPressed('right') &&
+      State.player.pos[0] <= canvas.width - State.player.sprite.size[0]
+    ) {
     State.player.pos[0] += playerSpeed * dt;
   }
 }
