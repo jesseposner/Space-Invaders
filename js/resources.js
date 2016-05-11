@@ -20,7 +20,6 @@ function _load(url) {
 }
 
 var Resources = {
-  // Load an image url or an array of image urls
   load: function(urlOrArr) {
     if (urlOrArr instanceof Array) {
       urlOrArr.forEach(function(url) {

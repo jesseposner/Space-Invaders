@@ -9,6 +9,7 @@ var Sprite = function(url, pos, size, speed, frames, dir, once) {
   this.url = url;
   this.dir = dir || 'horizontal';
   this.once = once;
+  this.orientation = 'left';
 };
 
 Sprite.prototype = {
@@ -19,12 +20,12 @@ Sprite.prototype = {
   render: function(ctx) {
     var frame;
 
-    if(this.speed > 0) {
+    if (this.speed > 0) {
       var max = this.frames.length;
       var idx = Math.floor(this._index);
       frame = this.frames[idx % max];
 
-      if(this.once && idx >= max) {
+      if (this.once && idx >= max) {
        this.done = true;
        return;
       }
