@@ -4,7 +4,8 @@ var Resources = require('./resources.js'),
     Starfield = require('./starfield.js'),
     Key = require('./keymaster.min.js'),
     enemySpeed = 100,
-    playerSpeed = 200;
+    playerSpeed = 200,
+    bulletSpeed = 500;
 
 document.addEventListener("DOMContentLoaded", function () {
   var canvas = document.createElement("canvas");
@@ -15,7 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   Resources.load([
     'img/ufos.png',
-    'img/fighter.png'
+    'img/fighter.png',
+    'img/fighter-bullet.png'
   ]);
   Resources.onReady(init.bind(null, ctx, canvas));
 });
@@ -67,6 +69,10 @@ function render(ctx, canvas, starField) {
 
   renderEntity(State.player, ctx);
 
+  State.bullets.forEach(function (bullet) {
+    renderEntity(bullet, ctx);
+  });
+
   State.enemies.forEach(function (enemy) {
     renderEntity(enemy, ctx);
   });
@@ -90,7 +96,19 @@ function update(dt, canvas, starField) {
 function updateEntities(dt, canvas) {
   State.player.sprite.update(dt);
 
-  State.enemies.forEach(function functionName(enemy) {
+  State.bullets.forEach(function (bullet, index) {
+    bullet.pos[1] -= bulletSpeed * dt;
+
+    if (
+      bullet.pos[1] < 0 ||
+      bullet.pos[1] > canvas.height ||
+      bullet.pos[0] > canvas.width
+    ) {
+      State.bullets.splice(index, 1);
+    }
+  });
+
+  State.enemies.forEach(function (enemy) {
     if (enemy.pos[0] <= 0) {
       enemy.sprite.orientation = 'right';
     } else if (
@@ -133,5 +151,19 @@ function handleInput(dt, canvas) {
       State.player.pos[0] <= canvas.width - State.player.sprite.size[0]
     ) {
     State.player.pos[0] += playerSpeed * dt;
+  } else if (
+      Key.isPressed('space') && Date.now() - State.lastFire > 100
+    ) {
+    var x = State.player.pos[0] + State.player.sprite.size[0] / 2;
+    var y = State.player.pos[1] + State.player.sprite.size[1] / 2;
+
+    State.bullets.push({ pos: [x, y],
+                         dir: 'up',
+                         sprite: new Sprite(
+                           'img/fighter-bullet.png', [0, 0], [50, 120]
+                         )
+                      });
+
+    State.lastFire = Date.now();
   }
 }
