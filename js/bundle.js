@@ -51,7 +51,8 @@
 	    Key = __webpack_require__(5),
 	    enemySpeed = 100,
 	    playerSpeed = 200,
-	    playerBulletSpeed = 500;
+	    playerBulletSpeed = 500,
+	    enemyBulletSpeed = 300;
 	
 	document.addEventListener("DOMContentLoaded", function () {
 	  var canvas = document.createElement("canvas");
@@ -64,7 +65,8 @@
 	    'img/ufos.png',
 	    'img/fighter.png',
 	    'img/fighter-bullet.png',
-	    'img/explosion.png'
+	    'img/explosion.png',
+	    'img/enemy-bullet.png'
 	  ]);
 	  Resources.onReady(init.bind(null, ctx, canvas));
 	});
@@ -96,6 +98,25 @@
 	    });
 	  }
 	
+	  setInterval(function () {
+	    State.enemies.forEach(function (enemy) {
+	      var x = enemy.pos[0];
+	      var y = enemy.pos[1] + enemy.sprite.size[1] / 2;
+	
+	      State.enemyBullets.push({ pos: [x, y], sprite: new Sprite(
+	          'img/enemy-bullet.png',
+	          [0, 0],
+	          [50, 50],
+	          15,
+	          [
+	           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 13,
+	           12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+	          ]
+	         )
+	      });
+	    });
+	  }, 1000);
+	
 	  main(ctx, canvas, lastTime, starField);
 	}
 	
@@ -121,12 +142,16 @@
 	
 	  renderEntity(State.player, ctx);
 	
-	  State.playerBullets.forEach(function (bullet) {
+	  State.enemies.forEach(function (enemy) {
+	    renderEntity(enemy, ctx);
+	  });
+	
+	  State.enemyBullets.forEach(function (bullet) {
 	    renderEntity(bullet, ctx);
 	  });
 	
-	  State.enemies.forEach(function (enemy) {
-	    renderEntity(enemy, ctx);
+	  State.playerBullets.forEach(function (bullet) {
+	    renderEntity(bullet, ctx);
 	  });
 	
 	  State.explosions.forEach(function (explosion) {
@@ -165,6 +190,16 @@
 	    bullet.pos[1] -= playerBulletSpeed * dt;
 	
 	    if (bullet.pos[1] > canvas.height + bullet.sprite.size[1]) {
+	      State.playerBullets.splice(index, 1);
+	    }
+	
+	    bullet.sprite.update(dt);
+	  });
+	
+	  State.enemyBullets.forEach(function (bullet, index) {
+	    bullet.pos[1] += playerBulletSpeed * dt;
+	
+	    if (bullet.pos[1] < canvas.height - bullet.sprite.size[1]) {
 	      State.playerBullets.splice(index, 1);
 	    }
 	
@@ -219,13 +254,37 @@
 	}
 	
 	function checkCollisions() {
+	  State.enemyBullets.forEach(function (bullet, bulletIndex) {
+	    var playerPos = State.player.pos,
+	        playerSize = State.player.sprite.size,
+	        bulletPos = bullet.pos,
+	        bulletSize = bullet.sprite.size;
+	
+	    if (boxCollides(playerPos, playerSize, bulletPos, bulletSize)) {
+	      State.explosions.push({
+	        pos: playerPos,
+	        sprite: new Sprite('img/explosion.png',
+	                           [0, 0],
+	                           [50, 105],
+	                           17,
+	                           [
+	                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+	                             13, 14, 15, 16, 17
+	                           ],
+	                           null,
+	                           true)
+	      });
+	      State.enemyBullets.splice(bulletIndex, 1);
+	    }
+	  });
+	
 	  State.enemies.forEach(function (enemy, enemyIndex) {
-	    var enemyPos = enemy.pos;
-	    var enemySize = enemy.sprite.size;
+	    var enemyPos = enemy.pos,
+	        enemySize = enemy.sprite.size;
 	
 	    State.playerBullets.forEach(function (bullet, bulletIndex) {
-	      var bulletPos = bullet.pos;
-	      var bulletSize = bullet.sprite.size;
+	      var bulletPos = bullet.pos,
+	          bulletSize = bullet.sprite.size;
 	
 	      if (boxCollides(enemyPos, enemySize, bulletPos, bulletSize)) {
 	        State.explosions.push({
@@ -262,9 +321,7 @@
 	    var x = State.player.pos[0];
 	    var y = State.player.pos[1] - State.player.sprite.size[1] / 2;
 	
-	    State.playerBullets.push({ pos: [x, y],
-	                         dir: 'up',
-	                         sprite: new Sprite(
+	    State.playerBullets.push({ pos: [x, y], sprite: new Sprite(
 	                           'img/fighter-bullet.png',
 	                           [0, 0],
 	                           [50, 120],
