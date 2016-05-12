@@ -15,6 +15,15 @@ canvas {
     right: 0;
 }
 
+h1, h3 {
+  text-align: center;
+  color: white;
+  margin-bottom: 0px;
+  padding-bottom: 20px;
+  padding-top: 0px;
+  margin-top: 0px;
+}
+
 #game-over, #game-over-overlay {
   margin: auto;
   width: 512px;
@@ -57,7 +66,7 @@ canvas {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -82px;
   z-index: 1;
   display: block;
   height: 178px;
