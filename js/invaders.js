@@ -45,31 +45,30 @@ function init(ctx, canvas) {
 
   reset(canvas);
 
-  setInterval(function () {
-    State.enemies.forEach(function (enemy) {
-      var x = enemy.pos[0];
-      var y = enemy.pos[1] + enemy.sprite.size[1] / 2;
-
-      State.enemyBullets.push({ pos: [x, y], sprite: new Sprite(
-          'img/enemy-bullet.png',
-          [0, 0],
-          [50, 50],
-          30,
-          [
-           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 13,
-           12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-          ]
-         )
-      });
-    });
-  }, 5000);
-
   main(ctx, canvas, lastTime, starField);
 }
 
 function main(ctx, canvas, lastTime, starField) {
   var now = Date.now();
   var dt = (now - lastTime) / 1000.0;
+
+  State.enemies.forEach(function (enemy, index) {
+    if (Math.random() < 0.003) {
+      State.enemyBullets.push(
+        { pos: [enemy.pos[0], enemy.pos[1] + enemy.sprite.size[1] / 2],
+          sprite: new Sprite(
+            'img/enemy-bullet.png',
+            [0, 0],
+            [50, 50],
+            30,
+            [
+             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 13,
+             12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+            ]
+         )
+      });
+    }
+  });
 
   update(dt, canvas, starField);
   render(ctx, canvas, starField);
@@ -89,15 +88,15 @@ function render(ctx, canvas, starField) {
 
   renderEntity(State.player, ctx);
 
+  State.playerBullets.forEach(function (bullet) {
+    renderEntity(bullet, ctx);
+  });
+
   State.enemies.forEach(function (enemy) {
     renderEntity(enemy, ctx);
   });
 
   State.enemyBullets.forEach(function (bullet) {
-    renderEntity(bullet, ctx);
-  });
-
-  State.playerBullets.forEach(function (bullet) {
     renderEntity(bullet, ctx);
   });
 
@@ -136,7 +135,7 @@ function updateEntities(dt, canvas) {
   State.playerBullets.forEach(function (bullet, index) {
     bullet.pos[1] -= playerBulletSpeed * dt;
 
-    if (bullet.pos[1] > canvas.height + bullet.sprite.size[1]) {
+    if (bullet.pos[1] < 0 - bullet.sprite.size[1]) {
       State.playerBullets.splice(index, 1);
     }
 
@@ -227,48 +226,40 @@ function checkCollisions() {
   });
 
   State.enemies.forEach(function (enemy, enemyIndex) {
-    var enemyPos = enemy.pos,
-        enemySize = enemy.sprite.size;
+      var enemyPos = enemy.pos,
+          enemySize = enemy.sprite.size;
 
-    State.playerBullets.forEach(function (bullet, bulletIndex) {
-      var bulletPos = bullet.pos,
-          bulletSize = bullet.sprite.size;
+      State.playerBullets.forEach(function (bullet, bulletIndex) {
+        var bulletPos = bullet.pos,
+            bulletSize = bullet.sprite.size;
 
-      if (boxCollides(enemyPos, enemySize, bulletPos, bulletSize)) {
-        State.explosions.push({
-          pos: enemyPos,
-          sprite: new Sprite('img/explosion.png',
-                             [0, 0],
-                             [50, 105],
-                             17,
-                             [
-                               0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                               13, 14, 15, 16, 17
-                             ],
-                             null,
-                             true)
-        });
-        State.enemies.splice(enemyIndex, 1);
-        State.playerBullets.splice(bulletIndex, 1);
-      }
-    });
+        if (boxCollides(enemyPos, enemySize, bulletPos, bulletSize)) {
+          State.explosions.push({
+            pos: enemyPos,
+            sprite: new Sprite('img/explosion.png',
+                               [0, 0],
+                               [50, 105],
+                               17,
+                               [
+                                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                 13, 14, 15, 16, 17
+                               ],
+                               null,
+                               true)
+          });
+          State.enemies.splice(enemyIndex, 1);
+          State.playerBullets.splice(bulletIndex, 1);
+        }
+      });
   });
 }
 
 function handleInput(dt, canvas) {
-  if (Key.isPressed('left') && State.player.pos[0] >= 0) {
-    State.player.pos[0] -= playerSpeed * dt;
-  } else if (
-      Key.isPressed('right') &&
-      State.player.pos[0] <= canvas.width - State.player.sprite.size[0]
-    ) {
-    State.player.pos[0] += playerSpeed * dt;
-  } else if (
-      Key.isPressed('space') && Date.now() - State.lastFire > 300
+  if (
+      Key.isPressed('space') && Date.now() - State.lastFire > 500
     ) {
     var x = State.player.pos[0];
     var y = State.player.pos[1] - State.player.sprite.size[1] / 2;
-
     State.playerBullets.push({ pos: [x, y], sprite: new Sprite(
                            'img/fighter-bullet.png',
                            [0, 0],
@@ -282,6 +273,111 @@ function handleInput(dt, canvas) {
                       });
 
     State.lastFire = Date.now();
+  }
+
+  if (Key.isPressed('left') && State.player.pos[0] >= 0) {
+    State.player.pos[0] -= playerSpeed * dt;
+
+    if (State.playerDirection === 'center') {
+      State.playerDirection = 'incomplete';
+
+      State.player.sprite = new Sprite(
+        'img/fighter.png',
+        [0, 0],
+        [50, 135],
+        15,
+        [4, 3, 2, 1, 0],
+        null,
+        null,
+        function () {
+          State.playerDirection = 'left';
+        }
+      );
+    } else if (State.playerDirection === 'right') {
+      State.playerDirection = 'incomplete';
+
+      State.player.sprite = new Sprite(
+        'img/fighter.png',
+        [0, 0],
+        [50, 135],
+        15,
+        [9, 8, 7, 6, 5],
+        null,
+        null,
+        function () {
+          State.playerDirection = 'center';
+        }
+      );
+    }
+  } else if (
+      Key.isPressed('right') &&
+      State.player.pos[0] <= canvas.width - State.player.sprite.size[0]
+    ) {
+    State.player.pos[0] += playerSpeed * dt;
+
+    if (State.playerDirection === 'center') {
+      State.playerDirection = 'incomplete';
+
+      State.player.sprite = new Sprite(
+        'img/fighter.png',
+        [0, 0],
+        [50, 135],
+        15,
+        [6, 7, 8, 9, 10],
+        null,
+        null,
+        function () {
+          State.playerDirection = 'right';
+        }
+      );
+    } else if (State.playerDirection === 'left') {
+      State.playerDirection = 'incomplete';
+
+      State.player.sprite = new Sprite(
+        'img/fighter.png',
+        [0, 0],
+        [50, 135],
+        15,
+        [1, 2, 3, 4, 5],
+        null,
+        null,
+        function () {
+          State.playerDirection = 'center';
+        }
+      );
+    }
+  } else if (Key.getPressedKeyCodes().length === 0) {
+    if (State.playerDirection === 'left') {
+      State.playerDirection = 'incomplete';
+
+      State.player.sprite = new Sprite(
+        'img/fighter.png',
+        [0, 0],
+        [50, 135],
+        15,
+        [1, 2, 3, 4, 5],
+        null,
+        null,
+        function () {
+          State.playerDirection = 'center';
+        }
+      );
+    } else if (State.playerDirection === 'right') {
+      State.playerDirection = 'incomplete';
+
+      State.player.sprite = new Sprite(
+        'img/fighter.png',
+        [0, 0],
+        [50, 135],
+        15,
+        [9, 8, 7, 6, 5],
+        null,
+        null,
+        function () {
+          State.playerDirection = 'center';
+        }
+      );
+    }
   }
 }
 

@@ -1,14 +1,16 @@
 var Resources = require('./resources.js');
 
-var Sprite = function(url, pos, size, speed, frames, dir, once) {
+var Sprite = function(url, pos, size, speed, frames, dir, once, stickyOnce) {
+  this.url = url;
   this.pos = pos;
   this.size = size;
   this.speed = typeof speed === 'number' ? speed : 0;
   this.frames = frames;
-  this._index = 0;
-  this.url = url;
   this.dir = dir || 'horizontal';
   this.once = once;
+  this.stickyOnce = stickyOnce;
+
+  this._index = 0;
   this.orientation = 'left';
 };
 
@@ -18,20 +20,22 @@ Sprite.prototype = {
   },
 
   render: function(ctx) {
-    var frame;
+    var max = this.frames.length,
+        idx = Math.floor(this._index),
+        frame;
 
-    if (this.speed > 0) {
-      var max = this.frames.length;
-      var idx = Math.floor(this._index);
+    if (this.stickyOnce && idx >= max) {
+      this.stickyOnce();
+      frame = this.frames[this.frames.length - 1];
+    } else if (this.speed > 0) {
       frame = this.frames[idx % max];
 
       if (this.once && idx >= max) {
        this.done = true;
        return;
       }
-
     } else {
-     frame = 0;
+      frame = 0;
     }
 
     var x = this.pos[0];
