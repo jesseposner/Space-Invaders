@@ -6,7 +6,7 @@ var Resources = require('./resources.js'),
     enemySpeed = 100,
     playerSpeed = 200,
     playerBulletSpeed = 500,
-    enemyBulletSpeed = 300;
+    enemyBulletSpeed = 100;
 
 document.addEventListener("DOMContentLoaded", function () {
   var canvas = document.createElement("canvas");
@@ -38,19 +38,12 @@ function init(ctx, canvas) {
   var lastTime = Date.now(),
   starField = new Starfield();
 
-  for (var i = 0; i < 10; i++) {
-    State.enemies.push({
-      pos: [Math.random() * canvas.width,
-            Math.random() * (canvas.height - 300)],
-      sprite: new Sprite(
-        'img/ufos.png',
-        [0, 0],
-        [64, 64],
-        20,
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-      )
-    });
-  }
+  document.getElementById('play-again')
+          .addEventListener('click', function() {
+            reset(canvas);
+  });
+
+  reset(canvas);
 
   setInterval(function () {
     State.enemies.forEach(function (enemy) {
@@ -61,15 +54,15 @@ function init(ctx, canvas) {
           'img/enemy-bullet.png',
           [0, 0],
           [50, 50],
-          15,
+          30,
           [
-           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 13,
+           1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 13,
            12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
           ]
          )
       });
     });
-  }, 1000);
+  }, 5000);
 
   main(ctx, canvas, lastTime, starField);
 }
@@ -151,7 +144,7 @@ function updateEntities(dt, canvas) {
   });
 
   State.enemyBullets.forEach(function (bullet, index) {
-    bullet.pos[1] += playerBulletSpeed * dt;
+    bullet.pos[1] += enemyBulletSpeed * dt;
 
     if (bullet.pos[1] < canvas.height - bullet.sprite.size[1]) {
       State.playerBullets.splice(index, 1);
@@ -229,6 +222,7 @@ function checkCollisions() {
                            true)
       });
       State.enemyBullets.splice(bulletIndex, 1);
+      // gameOver();
     }
   });
 
@@ -288,5 +282,37 @@ function handleInput(dt, canvas) {
                       });
 
     State.lastFire = Date.now();
+  }
+}
+
+function gameOver() {
+  document.getElementById('game-over').style.display = 'block';
+  document.getElementById('game-over-overlay').style.display = 'block';
+}
+
+function reset(canvas) {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('game-over-overlay').style.display = 'none';
+
+  State.gameTime = 0;
+  State.score = 0;
+
+  State.enemies = [];
+  State.bullets = [];
+
+  State.player.pos = [0, 450];
+
+  for (var i = 0; i < 10; i++) {
+    State.enemies.push({
+      pos: [Math.random() * canvas.width,
+            Math.random() * (canvas.height - 300)],
+      sprite: new Sprite(
+        'img/ufos.png',
+        [0, 0],
+        [64, 64],
+        20,
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+      )
+    });
   }
 }
