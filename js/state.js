@@ -16,7 +16,7 @@ var State = {
 
   explosions: [],
 
-  lastFire: Date.now(),
+  lastFire: 2926092504136,
 
   gameTime: 0,
 

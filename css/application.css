@@ -47,3 +47,26 @@ canvas {
 #game-over button {
   font-size: 1.5em;
 }
+
+#weapon-status {
+  margin: auto;
+  margin-bottom: 0px;
+  width: 512px;
+  height: 600px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: block;
+  height: 178px;
+  text-align: center;
+  color: white;
+}
+
+#weapon-status h1 {
+  font-size: 3em;
+  font-family: sans-serif;
+  color: red;
+}

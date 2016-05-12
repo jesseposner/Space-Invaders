@@ -52,8 +52,24 @@ function main(ctx, canvas, lastTime, starField) {
   var now = Date.now();
   var dt = (now - lastTime) / 1000.0;
 
+  if (State.enemies.length === 0) {
+    for (var i = 0; i < Math.floor(Math.random() * 10) + 10; i++) {
+      State.enemies.push({
+        pos: [Math.random() * canvas.width,
+              Math.random() * (canvas.height - 300)],
+        sprite: new Sprite(
+          'img/ufos.png',
+          [0, 0],
+          [64, 64],
+          20,
+          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        )
+      });
+    }
+  }
+
   State.enemies.forEach(function (enemy, index) {
-    if (Math.random() < 0.003) {
+    if (Math.random() < 0.004) {
       State.enemyBullets.push(
         { pos: [enemy.pos[0], enemy.pos[1] + enemy.sprite.size[1] / 2],
           sprite: new Sprite(
@@ -202,9 +218,10 @@ function boxCollides(pos, size, pos2, size2) {
 function checkCollisions() {
   State.enemyBullets.forEach(function (bullet, bulletIndex) {
     var playerPos = State.player.pos,
-        playerSize = State.player.sprite.size,
+        playerSize = [State.player.sprite.size[0] - 20,
+                      State.player.sprite.size[1] - 20],
         bulletPos = bullet.pos,
-        bulletSize = bullet.sprite.size;
+        bulletSize = [bullet.sprite.size[0] - 20, bullet.sprite.size[1] - 20];
 
     if (boxCollides(playerPos, playerSize, bulletPos, bulletSize)) {
       State.explosions.push({
@@ -221,7 +238,7 @@ function checkCollisions() {
                            true)
       });
       State.enemyBullets.splice(bulletIndex, 1);
-      // gameOver();
+      gameOver();
     }
   });
 
@@ -249,6 +266,8 @@ function checkCollisions() {
           });
           State.enemies.splice(enemyIndex, 1);
           State.playerBullets.splice(bulletIndex, 1);
+          State.score += 100;
+          document.getElementById('weapon-status-text').innerText = State.score;
         }
       });
   });
@@ -384,19 +403,23 @@ function handleInput(dt, canvas) {
 function gameOver() {
   document.getElementById('game-over').style.display = 'block';
   document.getElementById('game-over-overlay').style.display = 'block';
+  State.player.pos = [1000, 1000];
 }
 
 function reset(canvas) {
   document.getElementById('game-over').style.display = 'none';
   document.getElementById('game-over-overlay').style.display = 'none';
+  document.getElementById('weapon-status-text').innerText = 'CHARGING';
+  document.getElementById('weapon-status-text').style.color = 'red';
 
   State.gameTime = 0;
   State.score = 0;
 
   State.enemies = [];
   State.bullets = [];
+  State.enemyBullets = [];
 
-  State.player.pos = [0, 450];
+  State.player.pos = [256, 450];
 
   for (var i = 0; i < 10; i++) {
     State.enemies.push({
@@ -411,4 +434,9 @@ function reset(canvas) {
       )
     });
   }
+  setTimeout(function () {
+    document.getElementById('weapon-status-text').innerText = 'READY';
+    document.getElementById('weapon-status-text').style.color = 'green';
+    State.lastFire = Date.now();
+  }, 5000);
 }
